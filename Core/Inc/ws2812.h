@@ -69,8 +69,7 @@ void render_neopixel(void);
 void one_color_render(uint8_t blue,uint8_t red,uint8_t green);
 void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
 void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
-void render_rainbow_cycle_mode(uint16_t delay);\
+void render_rainbow_cycle_mode(uint16_t delay);
 void render_breath_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
-
 
 #endif //ifndef INC_WS2812_H_

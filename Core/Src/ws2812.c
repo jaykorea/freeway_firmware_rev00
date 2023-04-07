@@ -55,65 +55,47 @@ static uint8_t *hsvtorbg(float H,float S,float V)
 	return HVS;
 }
 
-float *rgbtohsv(uint8_t red, uint8_t green, uint8_t blue)
+float *rgbtohsv(uint8_t r, uint8_t g, uint8_t b)
 {
-	static float HSV[3];
-	uint8_t r = red;
-	uint8_t g = green;
-	uint8_t b = blue;
-	float r_per = (float)r/255.0;
-	float g_per = (float)g/255.0;
-	float b_per = (float)b/255.0;
+	static float hsv[3];
 
-	float max_color = 0;
-	if((r_per >= g_per) && (r_per >= b_per)) max_color = r_per;
-	if((g_per >= r_per) && (g_per >= b_per)) max_color = g_per;
-	if((b_per >= r_per) && (b_per >= g_per)) max_color = b_per;
+	float r_per = (float)r / 255.0;
+	float g_per = (float)g / 255.0;
+	float b_per = (float)b / 255.0;
 
-	float min_color = 0;
-	if((r_per <= g_per) && (r_per <= b_per)) min_color = r_per;
-	if((g_per <= r_per) && (g_per <= b_per)) min_color = g_per;
-	if((b_per <= r_per) && (b_per <= g_per)) min_color = b_per;
+	float max_color = fmaxf(r_per, fmaxf(g_per, b_per));
+	float min_color = fminf(r_per, fminf(g_per, b_per));
+	float delta = max_color - min_color;
 
-	float V=0;
-	float S=0;
-	float H=0;
-
-	V=(max_color + min_color)/2;
-
-	if(max_color == min_color) {
-		S = 0;
-		H = 0;
+	    // Calculate the hue
+	float h = 0;
+	if (delta == 0) {
+		h = 0;
+	} else if (max_color == r_per) {
+	    h = fmodf((g_per - b_per) / delta, 6.0);
+	} else if (max_color == g_per) {
+		h = (b_per - r_per) / delta + 2;
+	} else if (max_color == b_per) {
+	    h = (r_per - g_per) / delta + 4;
 	}
-	else {
-		if (V < 0.5) {
-			S = (max_color - min_color)/(max_color + min_color);
-		}
-		else {
-			S = (max_color - min_color)/(2-max_color - min_color);
-		}
+	    h *= 60.0;
 
-		if (max_color == r_per) {
-			H = (g_per - b_per)/(max_color-min_color);
-		}
-
-		if (max_color == g_per) {
-			H = 2 + (b_per - r_per)/(max_color - min_color);
-		}
-
-		if (max_color == b_per) {
-			H = 4 + (r_per - g_per)/(max_color - min_color);
-		}
+	    // Calculate the saturation
+	float s = 0;
+	if (max_color == 0) {
+	    s = 0;
+	} else {
+	    s = delta / max_color;
 	}
 
-	H = H*60;
-	if (H<0) H+= 360;
+	    // Calculate the value
+	float v = max_color;
 
-	HSV[0]=H;
-	HSV[1]=S*100;
-	HSV[2]=V*100;
+	hsv[0] = h;
+	hsv[1] = s * 100.0;
+	hsv[2] = v * 100.0;
 
-	return HSV;
+	return hsv;
 }
 
 void init_neopixel(type_led in_type_of_led)
@@ -144,7 +126,7 @@ void all_black_render(void)
 	render_neopixel();
 }
 
-void one_color_render(uint8_t blue,uint8_t red,uint8_t green)
+void one_color_render(uint8_t red,uint8_t green,uint8_t blue)
 {
 	uint_fast16_t var;
 	for (var = STARTBUFFERLED; var < ENDBUFFERLED; ++var)
@@ -177,29 +159,41 @@ void render_rainbow_cycle_mode(uint16_t delay)
 	render_neopixel();
 }
 
-void render_breath_mode( uint8_t blue,uint8_t red,uint8_t green,uint16_t delay)
+void render_breath_mode(uint8_t red, uint8_t green, uint8_t blue, uint16_t delay)
 {
-	uint_fast16_t var,var1;
-	static uint16_t angle,angle_cache;
-	float *rgb2hsv = rgbtohsv(red,green,blue);
-	if(++angle>360)
-		angle=0;
-	for (var = 0; var < ZONE; ++var) {
-		angle_cache=angle+(360/ZONE)*var;
-		if(angle_cache>360)
-			angle_cache=(angle+(360/ZONE)*var)-360;
-		uint8_t *hvs = hsvtorbg(*rgb2hsv, *(rgb2hsv+1), angle_cache);
-		for (var1 = var*LEDPERZONE+2; var1 < (var+1)*LEDPERZONE+2; ++var1) {
-			allrgb[var1].green=*hvs;
-			allrgb[var1].red=*(hvs+1);
-			allrgb[var1].blue=*(hvs+2);
-		}
-	}
-	HAL_Delay(delay);
-	render_neopixel();
+    uint_fast16_t var,var1;
+    static uint16_t angle,angle_cache;
+
+    for (var = 0; var < ZONE; ++var) {
+        angle_cache = angle + (360 / ZONE) * var;
+        if (angle_cache > 360) {
+            angle_cache = (angle + (360 / ZONE) * var) - 360;
+        }
+
+        // Calculate brightness based on sine wave
+        float brightness = sinf(angle_cache * M_PI / 180.0) * 0.5 + 0.5;
+
+        uint8_t r = red * brightness;
+        uint8_t g = green * brightness;
+        uint8_t b = blue * brightness;
+
+        for (var1 = var * LEDPERZONE + 2; var1 < (var+1) * LEDPERZONE + 2; ++var1) {
+            allrgb[var1].red = r;
+            allrgb[var1].green = g;
+            allrgb[var1].blue = b;
+        }
+    }
+
+    if (++angle > 360) {
+        angle = 0;
+    }
+
+    HAL_Delay(delay);
+    render_neopixel();
 }
 
-void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay)
+
+void render_falling_mode(uint8_t red,uint8_t green,uint8_t blue,uint16_t delay)
 {
 	uint_fast16_t var,var1;
 	for (var = STARTBUFFERLED; var < ENDBUFFERLED; ++var) {
@@ -214,7 +208,7 @@ void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay)
 	}
 }
 
-void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay)
+void render_raising_mode(uint8_t red,uint8_t green,uint8_t blue,uint16_t delay)
 {
 	int_fast16_t var,var1;
 	for (var = ENDBUFFERLED-1; var >= STARTBUFFERLED; --var) {

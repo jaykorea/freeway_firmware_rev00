@@ -373,9 +373,9 @@ int main(void)
 
 	  if(mode==HALT)
 	  {
-		  if (led_mode == 0) render_breath_mode(0,255,0,1); //B G R MAYBE RGB: (0,188,227)
-		  else if (led_mode == 1) render_breath_mode(0,0,255,1);
-		  else if (led_mode == 2) render_breath_mode(255,0,0,1);
+		  if (led_mode == 0) render_breath_mode(0, 254, 50, 0.5); //RGB
+		  else if (led_mode == 1) one_color_render(254,0,0); //RGB
+		  else if (led_mode == 2) render_breath_mode(0,0,254,1); //RGB
 
 		  //one_color_render(0, 255, 0); // B R G
 		  //render_falling_mode(128, 255, 0, 1);
