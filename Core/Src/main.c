@@ -19,7 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "string.h"
-
+#include <stdbool.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "mainpp.h"
@@ -34,7 +34,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-#define NUMBERLEDS		30
+#define NUMBERLEDS 30
 #define ARRAYNUM 3
 
 /* USER CODE END PD */
@@ -70,7 +70,7 @@ DMA_HandleTypeDef hdma_usart6_tx;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-
+const bool USE_SONAR = false;
 uint32_t XY[2];
 double IC_Val1_c1 = 0.0;
 double IC_Val2_c1 = 0.0;
@@ -330,9 +330,10 @@ int main(void)
   {
 	  double r_sonar = 0.0;
 	  double l_sonar = 0.0;
-	  if(HAL_GetTick() - start_tick >= 100) {
-		  HCSR04_Read_r();
-		  HCSR04_Read_l();
+	  if (USE_SONAR) {
+		  if(HAL_GetTick() - start_tick >= 100) {
+			  HCSR04_Read_r();
+			  HCSR04_Read_l();
 
 //		  // subtract the last reading:
 //		  total_c1 = total_c1 - readings_c1[idx];
@@ -359,12 +360,12 @@ int main(void)
 //		  kaldist_c1 = kalman(Distance_c1);
 //		  kaldist_c3 = kalman(Distance_c3);
 
-		  r_sonar = complementary_r(Distance_c1);
-		  l_sonar = complementary_l(Distance_c3);
+		  	  r_sonar = complementary_r(Distance_c1);
+		  	  l_sonar = complementary_l(Distance_c3);
 
-		  start_tick = HAL_GetTick();
+		  	  start_tick = HAL_GetTick();
+	  	  }
 	  }
-
 
 	  // send it to the computer as ASCII digits
 	  //render_raising_mode(215,125,123,5);
