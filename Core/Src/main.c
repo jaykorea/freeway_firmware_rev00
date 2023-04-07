@@ -373,8 +373,8 @@ int main(void)
 
 	  if(mode==HALT)
 	  {
-		  if (led_mode == 0) render_breath_mode(0, 254, 50, 0.5); //RGB
-		  else if (led_mode == 1) one_color_render(254,0,0); //RGB
+		  if (led_mode == 0) render_breath_mode(0, 254, 50, 3); //RGB
+		  else if (led_mode == 1) render_breath_mode(254,0,0,0); //RGB
 		  else if (led_mode == 2) render_breath_mode(0,0,254,1); //RGB
 
 		  //one_color_render(0, 255, 0); // B R G
